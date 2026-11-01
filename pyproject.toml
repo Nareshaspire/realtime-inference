@@ -1,27 +1,39 @@
-[project]
-name = "realtime-inference"
-version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-authors = [
-    { name = "nareshaspire", email = "nareshaspire45@gmail.com" }
+from __future__ import annotations
+
+from realtime_inference.inference_engine import RealtimeInferenceEngine
+from realtime_inference.ml_mvp import MultiDomainMLMVP, MultiDomainMLPrediction, demo
+from realtime_inference.models.base import BaseInferenceModel, DecisionType, ModelPredictionResult
+from realtime_inference.models.wrapper import LightweightInferenceWrapper
+from realtime_inference.schemas import (
+    BatchInferenceInputPayload,
+    BatchInferenceOutputPayload,
+    InferenceInputPayload,
+    InferenceOutputPayload,
+    TransactionFeatures,
+)
+
+__all__ = [
+    "BatchInferenceInputPayload",
+    "BatchInferenceOutputPayload",
+    "InferenceInputPayload",
+    "InferenceOutputPayload",
+    "TransactionFeatures",
+    "BaseInferenceModel",
+    "DecisionType",
+    "ModelPredictionResult",
+    "LightweightInferenceWrapper",
+    "RealtimeInferenceEngine",
+    "MultiDomainMLMVP",
+    "MultiDomainMLPrediction",
+    "demo",
 ]
-requires-python = ">=3.12"
-dependencies = [
-    "numpy>=2.5.4",
-    "pydantic>=2.14.2",
-    "pytest>=9.2.0",
-]
 
-[project.scripts]
-realtime-inference = "realtime_inference:main"
 
-[build-system]
-requires = ["uv_build>=0.13.6,<0.14.0"]
-build-backend = "uv_build"
+def main() -> None:
+    """CLI entry point demonstrating the trained multi-domain inference MVP."""
+    demo()
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = [".", "src"]
-addopts = "-v --strict-markers"
+
+if __name__ == "__main__":
+    main()
 
