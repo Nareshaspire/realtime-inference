@@ -3,8 +3,8 @@ from __future__ import annotations
 from realtime_inference.model_registry import MultiDomainModelRegistry
 
 
-def test_registry_loads_and_predicts() -> None:
-    registry = MultiDomainModelRegistry(artifact_dir="/tmp/realtime_inference_test_registry")
+def test_registry_predicts_expected_domain() -> None:
+    registry = MultiDomainModelRegistry(artifact_dir="/tmp/realtime_inference_registry_test")
     result = registry.predict(
         "predictive_maintenance",
         {
@@ -21,9 +21,9 @@ def test_registry_loads_and_predicts() -> None:
     assert 0.0 <= result["confidence"] <= 1.0
 
 
-def test_registry_retrain_domain_updates_model_version() -> None:
-    registry = MultiDomainModelRegistry(artifact_dir="/tmp/realtime_inference_test_registry_retrain")
-    before = registry.model_versions["fraud_anomaly"]
+def test_registry_retraining_updates_version() -> None:
+    registry = MultiDomainModelRegistry(artifact_dir="/tmp/realtime_inference_registry_retrain_test")
+    original_version = registry.model_versions["fraud_anomaly"]
     rows = [
         {
             "amount": 5000.0,
@@ -37,6 +37,5 @@ def test_registry_retrain_domain_updates_model_version() -> None:
     ]
     metrics = registry.retrain_domain("fraud_anomaly", new_rows=rows)
     assert metrics["domain"] == "fraud_anomaly"
-    assert registry.model_versions["fraud_anomaly"] == metrics["version"]
-    assert before != metrics["version"] or before == metrics["version"]
-
+    assert registry.model_versions["fraud_anomaly"] != original_version
+    assert registry.models["fraud_anomaly"].version == registry.model_versions["fraud_anomaly"]

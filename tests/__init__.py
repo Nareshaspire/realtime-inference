@@ -41,7 +41,7 @@ def test_metrics_endpoint() -> None:
     assert len(body["domains"]) >= 1
 
 
-def test_batch_predict_endpoint() -> None:
+def test_predict_batch_endpoint() -> None:
     payload = {
         "domain": "fraud_anomaly",
         "payloads": [
@@ -60,4 +60,3 @@ def test_batch_predict_endpoint() -> None:
     body = response.json()
     assert body["total"] == 1
     assert body["results"][0]["domain"] == "fraud_anomaly"
-
