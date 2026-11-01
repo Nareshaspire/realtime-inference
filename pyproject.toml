@@ -1,0 +1,27 @@
+[project]
+name = "realtime-inference"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "nareshaspire", email = "nareshaspire45@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.5.4",
+    "pydantic>=2.14.2",
+    "pytest>=9.2.0",
+]
+
+[project.scripts]
+realtime-inference = "realtime_inference:main"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "src"]
+addopts = "-v --strict-markers"
+
