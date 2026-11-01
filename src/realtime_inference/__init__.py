@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from realtime_inference.ml_mvp import MultiDomainMLMVP, MultiDomainMLPrediction, demo
+from typing import Any, Dict, List, Sequence
+
+from realtime_inference.api import app
+from realtime_inference.model_registry import MultiDomainModelRegistry
+from realtime_inference.streaming import InMemoryStreamProcessor, StreamEvent
 
 __all__ = [
-    "MultiDomainMLMVP",
-    "MultiDomainMLPrediction",
-    "demo",
+    "MultiDomainModelRegistry",
+    "InMemoryStreamProcessor",
+    "StreamEvent",
+    "app",
 ]
 
