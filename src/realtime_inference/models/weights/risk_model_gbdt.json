@@ -1,0 +1,22 @@
+{
+  "model_type": "GradientBoostingClassifier",
+  "runtime": "onnxruntime",
+  "version": "v2.0.0-gbdt",
+  "feature_names": [
+    "amount",
+    "account_age_days",
+    "transaction_velocity_1h",
+    "external_risk_score",
+    "device_trust_score",
+    "geo_distance_km"
+  ],
+  "classes": [
+    "ALLOW",
+    "REVIEW",
+    "BLOCK"
+  ],
+  "num_trees": 30,
+  "max_depth": 4,
+  "trained_at": "2026-11-02T05:12:15.393899+00:00",
+  "input_name": "float_input"
+}

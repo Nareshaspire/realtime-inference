@@ -1,25 +1,29 @@
 [project]
 name = "realtime-inference"
 version = "0.1.0"
-description = "Real-time multi-domain inference engine with trained model registry, streaming, and API service"
+description = "Real-time high-performance inference engine with ONNX Runtime, dynamic micro-batching, and FastAPI"
 readme = "README.md"
 authors = [
     { name = "nareshaspire", email = "nareshaspire45@gmail.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.162.0",
+    "httpx>=0.28.1",
     "numpy>=2.5.4",
+    "onnx>=1.23.2",
+    "onnxruntime>=1.31.1",
     "pydantic>=2.14.2",
     "pytest>=9.2.0",
-    "scikit-learn>=1.5.2",
-    "joblib>=1.4.2",
-    "fastapi>=0.115.0",
-    "uvicorn>=0.30.0",
-    "redis>=5.0.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "scikit-learn>=1.9.1",
+    "skl2onnx>=1.20.0",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [project.scripts]
 realtime-inference = "realtime_inference:main"
+realtime-serve = "realtime_inference.app:main"
 
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]
@@ -29,3 +33,5 @@ build-backend = "uv_build"
 testpaths = ["tests"]
 pythonpath = [".", "src"]
 addopts = "-v --strict-markers"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

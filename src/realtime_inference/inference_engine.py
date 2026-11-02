@@ -1,13 +1,16 @@
-"""High-performance real-time inference engine integrating strict validation and in-memory scoring."""
+"""High-performance real-time inference engine integrating strict validation, in-memory scoring, and hot-reload."""
 
 from __future__ import annotations
 
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 import numpy as np
 from pydantic import ValidationError
 
+from realtime_inference.models.base import BaseInferenceModel
+from realtime_inference.models.registry import ModelRegistry, ModelReloadError
 from realtime_inference.models.wrapper import LightweightInferenceWrapper
 from realtime_inference.schemas import (
     BatchInferenceInputPayload,
@@ -19,17 +22,39 @@ from realtime_inference.schemas import (
 
 
 class RealtimeInferenceEngine:
-    """End-to-end inference orchestrator.
+    """End-to-end inference orchestrator with model registry and circuit breaker fallback.
 
     Pipeline:
     1. Strict input validation against Pydantic schema (rejects invalid types/missing/extra fields).
     2. Zero-overhead numerical conversion to contiguous vector.
-    3. Low-latency in-memory model inference execution.
+    3. Low-latency in-memory model inference execution via active model or fallback.
     4. Strict output validation before returning response to callers.
     """
 
-    def __init__(self, model_wrapper: Optional[LightweightInferenceWrapper] = None) -> None:
-        self.model = model_wrapper if model_wrapper is not None else LightweightInferenceWrapper()
+    def __init__(
+        self,
+        model_wrapper: Optional[Union[BaseInferenceModel, ModelRegistry]] = None,
+        fallback_enabled: bool = True,
+    ) -> None:
+        if isinstance(model_wrapper, ModelRegistry):
+            self.registry = model_wrapper
+        elif isinstance(model_wrapper, BaseInferenceModel):
+            self.registry = ModelRegistry(default_model=model_wrapper, fallback_enabled=fallback_enabled)
+        else:
+            self.registry = ModelRegistry(fallback_enabled=fallback_enabled)
+
+    @property
+    def model(self) -> BaseInferenceModel:
+        """Return the currently active model from the registry."""
+        return self.registry.active_model
+
+    def hot_reload(self, target: Union[str, Path, BaseInferenceModel]) -> Dict[str, Any]:
+        """Atomically hot-swap the active model with zero downtime."""
+        return self.registry.hot_reload(target)
+
+    def get_model_info(self) -> Dict[str, Any]:
+        """Return metadata about active model and circuit breaker."""
+        return self.registry.get_info()
 
     def predict(
         self,
@@ -51,16 +76,16 @@ class RealtimeInferenceEngine:
         # Step 2: Feature extraction into ordered numeric array
         feature_vector = validated_input.features.to_array()
 
-        # Step 3: Fast in-memory model inference
+        # Step 3: Fast in-memory model inference (routed through registry with circuit breaker)
         t_start = time.perf_counter_ns()
-        result = self.model.predict_one(feature_vector)
+        result = self.registry.predict_one(feature_vector)
         t_end = time.perf_counter_ns()
         latency_ms = (t_end - t_start) / 1_000_000.0
 
         # Step 4: Strict output validation
         output = InferenceOutputPayload(
             request_id=validated_input.request_id,
-            model_version=self.model.version,
+            model_version=self.registry.active_model.version,
             decision=result.decision,
             risk_score=result.risk_score,
             confidence=result.confidence,
@@ -88,7 +113,7 @@ class RealtimeInferenceEngine:
         matrix = np.ascontiguousarray(raw_rows, dtype=np.float32)
 
         # Fast in-memory batch prediction
-        model_results = self.model.predict_batch(matrix)
+        model_results = self.registry.predict_batch(matrix)
 
         now = datetime.now(timezone.utc)
         predictions: List[InferenceOutputPayload] = []
@@ -96,7 +121,7 @@ class RealtimeInferenceEngine:
         for item, res in zip(validated_batch.items, model_results):
             single_out = InferenceOutputPayload(
                 request_id=item.request_id,
-                model_version=self.model.version,
+                model_version=self.registry.active_model.version,
                 decision=res.decision,
                 risk_score=res.risk_score,
                 confidence=res.confidence,
